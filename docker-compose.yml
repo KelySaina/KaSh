@@ -55,6 +55,8 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
     ports:
       - "4000:4000"
+    volumes:
+      - ./server:/app/server
     depends_on:
       mysql:
         condition: service_healthy
