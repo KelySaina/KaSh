@@ -8,15 +8,27 @@ const seedDatabase = async () => {
     console.log('Seeding database...');
 
     // Create demo user (this will be synced from Konnect Service in production)
-    const userId = uuidv4();
+    // Use a consistent UUID for demo user
+    const demoUserId = '00000000-0000-0000-0000-000000000001';
 
     await connection.query(
       `INSERT INTO users (id, email, first_name, last_name)
        VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE email=email`,
-      [userId, 'demo@kash.app', 'Demo', 'User']
+      [demoUserId, 'demo@kash.app', 'Demo', 'User']
     );
     console.log('✅ Demo user created');
+
+    // Check if categories already exist
+    const [existing] = await connection.query(
+      'SELECT COUNT(*) as count FROM categories WHERE user_id = ?',
+      [demoUserId]
+    );
+
+    if (existing[0].count > 0) {
+      console.log('✅ Demo data already exists, skipping seed');
+      return;
+    }
 
     // Default categories - Expenses
     const expenseCategories = [
@@ -34,7 +46,7 @@ const seedDatabase = async () => {
       await connection.query(
         `INSERT INTO categories (id, user_id, name, type, icon, color, is_default)
          VALUES (?, ?, ?, 'expense', ?, ?, true)`,
-        [uuidv4(), userId, cat.name, cat.icon, cat.color]
+        [uuidv4(), demoUserId, cat.name, cat.icon, cat.color]
       );
     }
     console.log('✅ Expense categories created');
@@ -51,7 +63,7 @@ const seedDatabase = async () => {
       await connection.query(
         `INSERT INTO categories (id, user_id, name, type, icon, color, is_default)
          VALUES (?, ?, ?, 'income', ?, ?, true)`,
-        [uuidv4(), userId, cat.name, cat.icon, cat.color]
+        [uuidv4(), demoUserId, cat.name, cat.icon, cat.color]
       );
     }
     console.log('✅ Income categories created');
@@ -63,20 +75,20 @@ const seedDatabase = async () => {
     await connection.query(
       `INSERT INTO accounts (id, user_id, name, type, balance, icon, color)
        VALUES (?, ?, 'Cash', 'cash', 500.00, '💵', '#10B981')`,
-      [cashAccountId, userId]
+      [cashAccountId, demoUserId]
     );
 
     await connection.query(
       `INSERT INTO accounts (id, user_id, name, type, balance, icon, color)
        VALUES (?, ?, 'Main Bank Account', 'bank', 5000.00, '🏦', '#3B82F6')`,
-      [bankAccountId, userId]
+      [bankAccountId, demoUserId]
     );
     console.log('✅ Sample accounts created');
 
     // Create sample transactions
     const [categories] = await connection.query(
       'SELECT id, name, type FROM categories WHERE user_id = ?',
-      [userId]
+      [demoUserId]
     );
 
     const foodCat = categories.find(c => c.name === 'Food & Dining');
@@ -86,14 +98,14 @@ const seedDatabase = async () => {
     await connection.query(
       `INSERT INTO transactions (id, user_id, account_id, category_id, type, amount, description, date)
        VALUES (?, ?, ?, ?, 'expense', 45.50, 'Lunch at restaurant', CURDATE())`,
-      [uuidv4(), userId, cashAccountId, foodCat.id]
+      [uuidv4(), demoUserId, cashAccountId, foodCat.id]
     );
 
     // Sample income
     await connection.query(
       `INSERT INTO transactions (id, user_id, account_id, category_id, type, amount, description, date)
        VALUES (?, ?, ?, ?, 'income', 3000.00, 'Monthly salary', CURDATE())`,
-      [uuidv4(), userId, bankAccountId, salaryCat.id]
+      [uuidv4(), demoUserId, bankAccountId, salaryCat.id]
     );
     console.log('✅ Sample transactions created');
 
@@ -101,7 +113,7 @@ const seedDatabase = async () => {
     await connection.query(
       `INSERT INTO budgets (id, user_id, category_id, name, amount, period, start_date)
        VALUES (?, ?, ?, 'Food Budget', 500.00, 'monthly', DATE_FORMAT(CURDATE(), '%Y-%m-01'))`,
-      [uuidv4(), userId, foodCat.id]
+      [uuidv4(), demoUserId, foodCat.id]
     );
     console.log('✅ Sample budget created');
 

@@ -46,10 +46,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-rootpassword}
       DB_NAME: ${DB_NAME:-kash_money_management}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      KONNECT_URL: ${KONNECT_URL:-http://host.docker.internal:3000}
+      KONNECT_URL: ${KONNECT_URL:-http://konnect-app:3000}
+      KONNECT_PUBLIC_URL: ${KONNECT_PUBLIC_URL:-http://localhost:3000}
       KONNECT_CLIENT_ID: ${KONNECT_CLIENT_ID}
       KONNECT_CLIENT_SECRET: ${KONNECT_CLIENT_SECRET}
-      KONNECT_REDIRECT_URI: ${KONNECT_REDIRECT_URI:-http://localhost:3001/auth/callback}
+      KONNECT_REDIRECT_URI: ${KONNECT_REDIRECT_URI:-http://localhost:4000/auth/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
       NODE_ENV: ${NODE_ENV:-production}
     ports:
       - "4000:4000"
@@ -58,6 +60,9 @@ services:
         condition: service_healthy
     networks:
       - kash-network
+      - konnect-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   kash-client:
     build:
@@ -75,6 +80,9 @@ services:
 networks:
   kash-network:
     driver: bridge
+  konnect-network:
+    external: true
+    name: konnect-service_konnect-network
 
 volumes:
   kash_mysql_data:

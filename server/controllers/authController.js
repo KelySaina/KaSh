@@ -4,7 +4,9 @@ const { v4: uuidv4 } = require('uuid');
 
 // Redirect to Konnect Service for login
 const login = (req, res) => {
-  const authUrl = new URL(`${process.env.KONNECT_URL}/oauth/authorize`);
+  // Use PUBLIC_URL for browser redirect, fallback to KONNECT_URL
+  const konnectPublicUrl = process.env.KONNECT_PUBLIC_URL || process.env.KONNECT_URL;
+  const authUrl = new URL(`${konnectPublicUrl}/oauth/authorize`);
   authUrl.searchParams.append('response_type', 'code');
   authUrl.searchParams.append('client_id', process.env.KONNECT_CLIENT_ID);
   authUrl.searchParams.append('redirect_uri', process.env.KONNECT_REDIRECT_URI);
